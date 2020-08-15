@@ -1,5 +1,5 @@
 # bilibiliReplyTool/哔哩哔哩评论统计分析工具
-###version2020815085914###
+<div id='toolVersion' style="display:none;">###version2020815085914###</div>
 
 <h3>使用方法</h3>
 <ol>
