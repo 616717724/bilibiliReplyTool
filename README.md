@@ -21,6 +21,6 @@
 <h3>演示视频</h3>
 <a href="https://www.bilibili.com/video/BV1Ht4y1D7Rf">https://www.bilibili.com/video/BV1Ht4y1D7Rf</a>
 
-网盘下载插件地址：
+<h3>网盘下载插件地址：</h3>
 链接：<a href="https://pan.baidu.com/s/1019KMC4QMIizn8yYauzG-Q">https://pan.baidu.com/s/1019KMC4QMIizn8yYauzG-Q</a>
 提取码：vx8f
