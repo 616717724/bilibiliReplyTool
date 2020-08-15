@@ -1,0 +1,783 @@
+javascript: (function() {
+	window.addScriptTag = function(fName, pn) {
+		if (!fName) {
+			fName = 'log';
+		}
+		if (!pn) {
+			pn = 1;
+		}
+		var src = 'https://api.bilibili.com/x/v2/reply?callback=' + fName + '&jsonp=jsonp&pn=' + pn + '&type=1&oid=' + window.aid + '&sort=2&_=' + new Date().getTime();
+		var script = document.createElement('script');
+		script.setAttribute("type", "text/javascript");
+		script.setAttribute("async", "async");
+		script.src = src;
+		document.body.appendChild(script);
+	};
+	/*获取data*/
+	window.log = function(data) {
+		this.data = data;
+		console.log(window.data);
+		this.allReply = [];
+		this.allReply[0] = data.data.replies;
+		getPage(data);
+	};
+	/*获取总页数*/
+	window.getPage = function(data) {
+		var data2 = data.data;
+		this.page = data2.page;
+		this.count = page.count;
+		this.pageCount = Math.ceil(page.count / page.size);
+		console.log(window.pageCount);
+		getAllReply();
+	};
+	/*获取留言*/
+	window.getReply = function(data) {
+		var data2 = data.data;
+		idx = idx + 1;
+		this.allReply[idx] = data2.replies;
+	};
+	/*获取全部留言*/
+	window.getAllReply = function() {
+		this.idx = 0;
+		for (i = 1; i < pageCount; i++) {
+			addScriptTag('getReply', (i));
+		}
+	};
+	/*分离出性别*/
+	window.parseSex = function(data) {
+		return data.member.sex;
+	};
+	/*性别统计*/
+	window.sexCount = function() {
+		sexData = [];
+		sexData['男'] = 0;
+		sexData['女'] = 0;
+		sexData['保密'] = 0;
+		for (idx1 in allReply) {
+			for (idx2 in allReply[idx1]) {
+				/*console.info(parseSex(allReply[idx1][idx2]));*/
+				sexData[parseSex(allReply[idx1][idx2])]++;
+			}
+		}
+		console.info(sexData);
+		return sexData;
+	};
+	/*分离出用户等级*/
+	window.parseLevel = function(data) {
+		return data.member.level_info.current_level;
+	};
+	/*等级统计*/
+	window.levelCount = function() {
+		leveData = [];
+		for (idx1 in allReply) {
+			for (idx2 in allReply[idx1]) {
+				var level=parseLevel(allReply[idx1][idx2]);
+				if(!!leveData[level]){
+					leveData[level]++;
+				}else{
+					leveData[level]=1;
+				}
+				/*console.info(parseLevel(allReply[idx1][idx2]));*/
+			}
+		}
+		window.leveData=leveData;
+		console.info(leveData);
+		return leveData;
+	};
+	
+	/*分离出评论时间*/
+	window.parseReplyTime = function(data) {
+		var nowdate=new Date(data.ctime*1000);
+		return nowdate;
+	};
+	
+	/*评论时间统计(年月)*/
+	window.replyTimeCountByYearAndMonth = function() {
+		replyTimeByYearAndMonthData = [];
+		for (idx1 in allReply) {
+			for (idx2 in allReply[idx1]) {
+				var date=parseReplyTime(allReply[idx1][idx2]);
+				var year=date.getYear()+1900;
+				var month=date.getMonth()+1;
+				var formateDate=year+"年"+month+"月";
+				if(!!replyTimeByYearAndMonthData[formateDate]){
+					replyTimeByYearAndMonthData[formateDate]++;
+				}else{
+					replyTimeByYearAndMonthData[formateDate]=1;
+				}
+				/*console.info(parseReplyTime(allReply[idx1][idx2]));*/
+			}
+		}
+		window.replyTimeByYearAndMonthData=replyTimeByYearAndMonthData;
+		console.info(replyTimeByYearAndMonthData);
+		return replyTimeByYearAndMonthData;
+	};
+	
+	/*评论时间统计(年月日)*/
+	window.replyTimeCountByYearMonthAndDay = function() {
+		replyTimeByYearAndMonthData = [];
+		for (idx1 in allReply) {
+			for (idx2 in allReply[idx1]) {
+				var date=parseReplyTime(allReply[idx1][idx2]);
+				var year=date.getYear()+1900;
+				var month=date.getMonth()+1;
+				var day=date.getDate();
+				var formateDate=year+"年"+month+"月"+day+"日";
+				if(!!replyTimeByYearAndMonthData[formateDate]){
+					replyTimeByYearAndMonthData[formateDate]++;
+				}else{
+					replyTimeByYearAndMonthData[formateDate]=1;
+				}
+				/*console.info(parseReplyTime(allReply[idx1][idx2]));*/
+			}
+		}
+		window.replyTimeByYearAndMonthData=replyTimeByYearAndMonthData;
+		console.info(replyTimeByYearAndMonthData);
+		return replyTimeByYearAndMonthData;
+	};
+	
+	/**分离出评论内容和用户信息*/
+	window.parseReplyContent = function(data) {
+		var msgData={};
+		msgData.message=data.content.message;
+		msgData.userInfo=data.member;
+		msgData.allInfo=data;
+		return msgData;
+	};
+	/*评论关键词检索,content:检索的内容;numbers:匹配的字数;allMatch:是否全词匹配*/
+	window.searchReplyContent = function(content,numbers,allMatch) {
+		contents = [];
+		var contentReg=new RegExp("([\\w\\W]*?)"+"(["+content+"]+)"+"([\\w\\W]?)");
+		if(!!numbers){
+			contentReg=new RegExp("([\\w\\W]*?)"+"(["+content+"]{"+numbers+"}+)"+"([\\w\\W]?)");
+		}
+		if(!!allMatch&&allMatch==true){
+			contentReg=new RegExp("([\\w\\W]*?)"+"(["+content+"]{"+content.length+"}+)"+"([\\w\\W]?)");
+		}
+		for (idx1 in allReply) {
+			for (idx2 in allReply[idx1]) {
+				var msgData=parseReplyContent(allReply[idx1][idx2]);
+				var message=msgData.message;
+				if(contentReg.test(message)){
+					msgData.message=message.replace(contentReg,"$1<span class='fRed'>$2</span>$3");
+					contents.push(msgData);
+					/*console.info(parseReplyContent(allReply[idx1][idx2]));*/
+				}
+			}
+		}
+		window.contents=contents;
+		console.info(contents);
+		return contents;
+	};
+	
+	/*过滤粉丝用户信息*/
+	window.filterFansReply = function (){
+		fansData = [];
+		for (idx1 in allReply) {
+			for (idx2 in allReply[idx1]) {
+				if(!!allReply[idx1][idx2].member.fans_detail){
+					var userData=parseReplyContent(allReply[idx1][idx2]);
+					fansData.push(userData);
+				}
+			}
+		}
+		window.fansData=fansData;
+		console.info(fansData);
+		return fansData;
+	};
+	
+	/*初始化*/
+	addScriptTag();
+	
+	/*创建子窗口*/
+	window.createSubWin=function(){
+		var subWin=window.open('','子窗口','width=900,height=600,left=450,top=200');
+		var src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js";
+		var subDoc=subWin.document;
+		var subBody=subWin.document.body;
+		window.iniJQ=function(){
+			var script = subDoc.createElement('script');
+			script.setAttribute("type", "text/javascript");
+			script.setAttribute("async", "async");
+			script.src = src;
+			subDoc.head.appendChild(script);
+		};
+		iniJQ();
+		var htmlContent=`<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<script src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+		<style>
+			body {
+				margin: 0px;
+				padding: 0px;
+			}
+
+			.topContent {
+				position: fixed;
+				height: 50px;
+				width: 100%;
+				background-color: #FFFFFF;
+				z-index: 12;
+				margin: 0;
+				padding: 0;
+				text-align: center;
+			}
+
+			.menuContent {
+				position: fixed;
+				padding: 0;
+				margin: 0;
+				left: 0;
+				top: 0;
+				bottom: 0;
+				right: 0;
+				background-color: #23ade5;
+				color: white;
+				width: 130px;
+				box-shadow: 1px 1px 5px #888888;
+				z-index: 11;
+			}
+
+			.menuContent>div:first-child {
+				margin-top: 50px;
+				text-align: center;
+			}
+
+			.menuContent div {
+				/* margin-top: 10px; */
+				text-align: center;
+				vertical-align: middle;
+				float: left;
+				width: 115px;
+			}
+
+			.menu {
+				border: #FFFFFF solid 1px;
+				margin-top: 15px;
+				padding-right: 2px;
+				margin-left: 5px;
+				box-shadow: 1px 1px 5px #888888;
+			}
+
+			.menu:hover {
+				background-color: rgb(35, 220, 220);
+			}
+
+			.dataContent {
+				--ml:130px;
+				margin-left: var(--ml);
+				padding-top: 60px;
+				padding-left: 0;
+				padding-right: 0;
+				--mw:800px;
+				min-width: calc(var((--mw)-(--ml)));
+				min-height: 270px;
+				z-index: 10;
+				/*background-color: #F5F5DC;*/
+			}
+
+			.icons {
+				background-image: url("https://static.hdslb.com/images/base/icons.png");
+				background-repeat: no-repeat;
+				background-position: 0px 0px;
+				display: inline-block;
+				width: 50px;
+				height: 50px;
+				float: left;
+				--bgx: -135px;
+				--bgy: -75px;
+			}
+
+			.icon1 {
+				background-position: var(--bgx) calc(var(--bgy)*1.1);
+			}
+
+			.icon2 {
+				background-position: var(--bgx) calc(var(--bgy)*1.9);
+			}
+			
+			.replyDiv {
+				background-color: white;
+				width: 638px;
+			}
+			
+			.userImg img {
+				height: 48px;
+				width: 48px;
+				vertical-align: middle;
+				border-radius: 50%;
+				padding: 0px 5px;
+			}
+			
+			.userName {
+				display: inline;
+				vertical-align: middle;
+				margin-left: 5px;
+			}
+			
+			.levelImg {
+				background-image: url(https://static.hdslb.com/phoenix/dist/images/icons-comment.png);
+				display: inline-block;
+				width: 19px;
+				height: 9px;
+				vertical-align: middle;
+				margin: 0 8px;
+				--levelImgX:-23px;
+				--levelImgBaseY:-92px;
+				--unit:-64px;
+				--levelImgY: calc(0% + var(--levelImgBaseY) + calc(var(--unit) * var(--times)));
+				background-position: var(--levelImgX) var(--levelImgY);
+			}
+			.levelImg1 {
+				--times:0;
+			}
+			.levelImg2 {
+				--times:1;
+			}
+			.levelImg3 {
+				--times:2;
+			}
+			.levelImg4 {
+				--times:3;
+			}
+			.levelImg5 {
+				--times:4;
+			}
+			.levelImg6 {
+				--times:5;
+			}
+			.levelImg7 {
+				--times:6;
+			}
+			.levelImg8 {
+				--times:7;
+			}
+			.replyContent{
+				margin-left: 58px;
+				border-bottom: 1px solid #e5e9ef;
+				padding-bottom: 5px;
+			}
+			.replyContentDiv{
+				text-align: center;
+				display: none;
+			}
+			#replyContentList{
+				text-align: left;
+				margin-left: 85px;
+			}
+			
+			.searchDiv{
+				width: 638px;
+				position: fixed;
+				text-align: left;
+				margin-left: 85px;
+				padding: 0px;
+				margin-top: -10px;
+				background-color: white;
+			}
+			.searchInput{
+				width: 90%;
+				overflow: hidden;
+				height: 34px;
+				background: #F4F4F4;
+				border: 1px solid #E7E7E7;
+				box-shadow: none;
+				color: #999;
+				font-size: 14px;
+				line-height: 34px;
+				vertical-align: middle;
+			}
+			.searchInput:hover{
+				background-color: rgba(240, 240, 240, 1);
+			}
+			.searchButton{
+				height: 34px;
+				width: 50px;
+				text-align: center;
+				vertical-align: middle;
+				display: inline-block;
+				margin: auto 0;
+				padding-top: 10px;
+				background-color: #c5cbcc;
+				color: white;
+			}
+			.searchButton:hover {
+			    background-color: #979a9a;
+			}
+			span.fRed {
+			    color: red;
+			}
+			.fansSign{
+				border: 1px solid #2EBDA7;
+				color: #2EBDA7;
+				border-radius: 3px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="topContent">
+			<div>
+				还没想好的标题...
+			</div>
+		</div>
+		<div class="menuContent">
+			<div>
+				<div class="menu">
+					<div onclick="sexCount()">用户性别统计</div>
+				</div>
+			</div>
+			<div>
+				<div class="menu">
+					<div onclick="replyTimeCount()">评论时间段统计</div>
+				</div>
+			</div>
+			<div>
+				<div class="menu">
+					<div onclick="levelCount()">用户等级统计</div>
+				</div>
+			</div>
+			<div>
+				<div class="menu">
+					<div onclick="searchReplys()">关键字搜索</div>
+				</div>
+			</div>
+			<div>
+				<div class="menu">
+					<div onclick="fansReplys()">牌粉留言信息</div>
+				</div>
+			</div>
+		</div>
+		<div class="dataContent" id="dataContent">
+
+		</div>
+		
+		<div class="dataContent replyContentDiv" id="replyContent">
+			<dir class="searchDiv">
+				<input class="searchInput" id="searchInput" onkeydown="keySearch()"/>
+				<div class="searchButton" onclick="showReplysContent()">搜索</div>
+			</dir>
+			<div class="dataContent" id="replyContentList">
+			
+			</div>
+		</div>
+
+		<script>
+			var opener;
+			$(document).ready(function() {
+				opener = window.opener;
+			});
+
+			function sexCount() {
+				if (!!opener) {
+					setSexEcharts();
+				}
+			}
+
+			function levelCount() {
+				if (!!opener) {
+					setLevelEcharts();
+				}
+			}
+			
+			function replyTimeCount(){
+				if (!!opener) {
+					setReplyTimeByYearAndMonthEcharts();
+				}
+			}
+			
+			function searchReplys(){
+				if (!!opener) {
+					$("#dataContent").css("display","none");
+					$(".searchDiv").css("display","block");
+					$("#replyContent").css("display","block");
+				}
+			}
+			
+			function fansReplys(){
+				if (!!opener) {
+					$("#dataContent").css("display","none");
+					$(".searchDiv").css("display","none");
+					$("#replyContent").css("display","block");
+					showFansReplys();
+				}
+			}
+		</script>
+
+		<script>
+			function setSexEcharts(){
+				var sexData=opener.sexCount();
+				var sexDataKeys=Object.keys(sexData);
+				var legendData=[];
+				var seriesData=[];
+				for(var i=0;i<sexDataKeys.length;i++){
+					var dataValue=sexData[sexDataKeys[i]];
+					var dataName=sexDataKeys[i];
+					if(!!dataValue){
+						legendData.push(dataName);
+						seriesData.push({value:dataValue,name:dataName});	
+					}
+				}
+				setPieChart('评论用户性别统计',legendData,seriesData);
+			}
+			
+			function setLevelEcharts(){
+				var levelData=opener.levelCount();
+				var levelDataKeys=Object.keys(levelData);
+				var seriesDataName=[];
+				var seriesDataValue=[];
+				for(var i=0;i<levelDataKeys.length;i++){
+					var dataValue=levelData[levelDataKeys[i]];
+					var dataName=levelDataKeys[i];
+					if(!!dataValue){
+						seriesDataName.push(dataName);
+						seriesDataValue.push(dataValue);
+					}
+				}
+				setHistogramChart('评论用户等级统计',seriesDataName,seriesDataValue);
+			}
+			
+			function setReplyTimeByYearAndMonthEcharts(){
+				var replyTimeData=opener.replyTimeCountByYearMonthAndDay();
+				var replyTimeDataKeys=Object.keys(replyTimeData);
+				var seriesData=[['0',0]];
+				if(1<replyTimeDataKeys.length){
+					seriesData=[];
+				}
+				/*时间排序*/
+				for(var i=0;i<replyTimeDataKeys.length-1;i++){
+		　　　　　　for(var j=0;j<replyTimeDataKeys.length-1-i;j++){
+		　　　　　　　　if(parseDateToCompare(replyTimeDataKeys[j],replyTimeDataKeys[j+1])>0){
+		　　　　　　　　　　var temp=replyTimeDataKeys[j];
+		　　　　　　　　　　replyTimeDataKeys[j]=replyTimeDataKeys[j+1];
+		　　　　　　　　　　replyTimeDataKeys[j+1]=temp;
+		　　　　　　　　}
+		　　　　　　}
+		　　　　}
+				for(var i=0;i<replyTimeDataKeys.length;i++){
+					var dataValue=replyTimeData[replyTimeDataKeys[i]];
+					var dataName=replyTimeDataKeys[i];
+					if(!!dataValue){
+						seriesData.push([dataName,dataValue]);	
+					}
+				}
+				setLineChart('评论用户时间段统计',seriesData);
+			}
+			
+			function parseStrDate(date){
+				return new Date(date.replace(/[年月日]/g,'/'));
+			}
+			
+			function parseDateToCompare(date1,date2){
+				date1=parseStrDate(date1);
+				date2=parseStrDate(date2);
+				return date1.getTime()-date2.getTime();
+			}
+			
+			/*设置饼状图*/
+			function setPieChart(title,legendData,seriesData){
+				option = {
+					title: {
+						text: title,
+						subtext: '',
+						left: 'center'
+					},
+					tooltip: {
+						trigger: 'item',
+						formatter: '{a} <br/>{b} : {c} ({d}%)'
+					},
+					legend: {
+						orient: 'vertical',
+						left: 'left',
+						data: legendData
+					},
+					series: [
+						{
+							name: '',
+							type: 'pie',
+							radius: '70%',
+							center: ['50%', '60%'],
+							data: seriesData
+						}
+					]
+				};
+				setEcharts(option);
+			}
+			
+			/*设置线状图*/
+			function setLineChart(title,seriesData){
+					
+				option = {
+					title: {
+						text: title,
+						subtext: '',
+						left: 'center'
+					},
+					xAxis: {
+						type: 'category',
+						boundaryGap: false
+					},
+					yAxis: {
+						type: 'value',
+						boundaryGap: [0, '30%']
+					},
+					visualMap: {
+						type: 'piecewise',
+						show: false,
+						dimension: 0,
+						seriesIndex: 0,
+						pieces: [{
+							gt: 1,
+							lt: 3,
+							color: 'rgba(0, 180, 222, 0.5)'
+						}, {
+							gt: 5,
+							lt: 7,
+							color: 'rgba(0, 180, 222, 0.5)'
+						}]
+					},
+					series: [
+						{
+							type: 'line',
+							smooth: 0.6,
+							symbol: 'none',
+							lineStyle: {
+								color: 'rgba(0, 180, 222, 0.5)',
+								width: 5
+							},
+							markLine: {
+								symbol: ['none', 'none'],
+								label: {show: false},
+								data: [
+									{xAxis: 1},
+									{xAxis: 3},
+									{xAxis: 5},
+									{xAxis: 7}
+								]
+							},
+							areaStyle: {},
+							data: seriesData
+						}
+					]
+				};
+				setEcharts(option);
+			}
+			
+			function setHistogramChart(title,seriesDataName,seriesDataValue){
+				option = {
+				    color: ['#3398DB'],
+				    tooltip: {
+				        trigger: 'axis',
+				        axisPointer: {
+				            type: 'shadow'
+				        }
+				    },
+				    grid: {
+				        left: '3%',
+				        right: '4%',
+				        bottom: '3%',
+				        containLabel: true
+				    },
+				    xAxis: [
+				        {
+				            type: 'category',
+				            data: seriesDataName,
+				            axisTick: {
+				                alignWithLabel: true
+				            }
+				        }
+				    ],
+				    yAxis: [
+				        {
+				            type: 'value'
+				        }
+				    ],
+				    series: [
+				        {
+				            name: title,
+				            type: 'bar',
+				            barWidth: '60%',
+				            data: seriesDataValue
+				        }
+				    ]
+				};
+				setEcharts(option);
+			}
+			
+			/*设置Echarts*/
+			var myChart;
+			function setEcharts(option){
+				$("#replyContent").css("display","none");
+				$("#dataContent").css("display","block");
+				if(!myChart){
+					var myChart = echarts.init(document.getElementById('dataContent'));
+				}
+				myChart.clear();
+				myChart.setOption(option);	
+			}
+			
+		</script>
+
+		<script>
+			var replyDivTemplate='';
+			var replyDivTemplate='<div class="replyDiv"><div class="userImg"><img src="@uImg@"/><span class="fansSign">@uFansTitle@<span class="fansSignLevel">@uFansLevel@</span></span><div class="userName">@uName@</div><dir class="levelImg levelImg@uLevel@"></dir></div><div class="replyContent">@uContent@</div></div>';
+			function showReplysContent(){
+				var contents=opener.searchReplyContent($("#searchInput").val());
+				var replyDivHtml='';
+				if(!!contents){
+					for(var i=0;i<contents.length;i++){
+						replyDivHtml+=parseReplyContent(contents[i]);
+					}
+				}
+				$("#replyContentList").html(replyDivHtml);
+			}
+			
+			function keySearch(){
+				if(window.event.key=='Enter'){
+					showReplysContent();
+				}
+			}
+			
+			function parseReplyContent(content){
+				var uImg=content.userInfo.avatar;
+				var uName=content.userInfo.uname;
+				var uLevel=content.userInfo.level_info.current_level;
+				var uContent=content.message;
+				/*返回HTML结果*/
+				var replyDiv=replyDivTemplate.replace('@uImg@',uImg).replace('@uName@',uName).replace('@uLevel@',uLevel).replace('@uContent@',uContent);
+				var allInfo=content.allInfo;
+				var fans_detail=allInfo.member.fans_detail;
+				if(!!fans_detail){
+					var uFansTitle=fans_detail.medal_name;
+					var uFansLevel=fans_detail.level;
+					replyDiv=replyDiv.replace('@uFansLevel@',uFansLevel);
+					replyDiv=replyDiv.replace('@uFansTitle@',uFansTitle);
+				}else{
+					replyDiv=replyDiv.replace('@uFansLevel@','');
+					replyDiv=replyDiv.replace('@uFansTitle@','');
+				}
+				return replyDiv;
+			}
+			
+			function showFansReplys(){
+				var contents=opener.filterFansReply();
+				var replyDivHtml='';
+				if(!!contents){
+					for(var i=0;i<contents.length;i++){
+						replyDivHtml+=parseReplyContent(contents[i]);
+					}
+				}
+				$("#replyContentList").html(replyDivHtml);
+			}
+		</script>
+	</body>
+</html>
+`;
+		subDoc.write(htmlContent);
+		subWin.data=window.data;
+	};
+	createSubWin();
+})();
