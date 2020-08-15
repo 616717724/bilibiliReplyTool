@@ -39,6 +39,9 @@ javascript: (function() {
 	/*获取全部留言*/
 	window.getAllReply = function() {
 		this.idx = 0;
+		if(pageCount>30){
+			pageCount=30;
+		}
 		for (i = 1; i < pageCount; i++) {
 			addScriptTag('getReply', (i));
 		}
@@ -187,14 +190,19 @@ javascript: (function() {
 	};
 	
 	/*初始化*/
-	addScriptTag();
+	window.init=function(){
+		if(!this.allReply){
+			addScriptTag();
+		}
+	};
+	init();
 	
 	/*创建子窗口*/
 	window.createSubWin=function(){
-		var subWin=window.open('','子窗口','width=900,height=600,left=450,top=200');
+		window.subWin=window.open('','子窗口','width=900,height=600,left=450,top=200');
 		var src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js";
-		var subDoc=subWin.document;
-		var subBody=subWin.document.body;
+		window.subDoc=subWin.document;
+		window.subBody=subWin.document.body;
 		window.iniJQ=function(){
 			var script = subDoc.createElement('script');
 			script.setAttribute("type", "text/javascript");
@@ -207,7 +215,7 @@ javascript: (function() {
 <html>
 	<head>
 		<meta charset="utf-8">
-		<title></title>
+		<title>bilibili评论统计分析工具</title>
 		<script src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js"></script>
 		<script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
 		<style>
@@ -225,6 +233,7 @@ javascript: (function() {
 				margin: 0;
 				padding: 0;
 				text-align: center;
+				box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.08);
 			}
 
 			.menuContent {
@@ -265,9 +274,10 @@ javascript: (function() {
 
 			.menu:hover {
 				background-color: rgb(35, 220, 220);
+				cursor: pointer;
 			}
 
-			.dataContent {
+			.dataContent,.indexContent {
 				--ml:130px;
 				margin-left: var(--ml);
 				padding-top: 60px;
@@ -278,6 +288,23 @@ javascript: (function() {
 				min-height: 270px;
 				z-index: 10;
 				/*background-color: #F5F5DC;*/
+			}
+			
+			.indexContent{
+				text-align: center;
+			}
+			.indexContent div{
+				text-align: left;
+				width: 70%;
+				display: inline-block;
+				font-size: 20px;
+			}
+			#checkVersionH {
+			    font-size: 32px;
+			}
+			
+			.dataContent{
+				display: none;
 			}
 
 			.icons {
@@ -407,6 +434,7 @@ javascript: (function() {
 			}
 			.searchButton:hover {
 			    background-color: #979a9a;
+				cursor: pointer;
 			}
 			span.fRed {
 			    color: red;
@@ -415,16 +443,43 @@ javascript: (function() {
 				border: 1px solid #2EBDA7;
 				color: #2EBDA7;
 				border-radius: 3px;
+				vertical-align: middle;
+			}
+			
+			.bili_logo{
+				float: left;
+				color: white;
+				font-size: 32px;
+				color: #00a1d6;
+				vertical-align: middle;
+				margin: 5px;
+				display: inline-block;
+			}
+			.bili_logo div{
+				margin: 5px;
+				display: inline;
+			}
+			
+			.note{
+				color: red;
 			}
 		</style>
 	</head>
 	<body>
 		<div class="topContent">
-			<div>
-				还没想好的标题...
-			</div>
+			<i class="bilifont bili-Navbar_logo bili_logo">
+				<div>
+					评论统计分析工具
+				</div>
+			</i>
+			
 		</div>
 		<div class="menuContent">
+			<div>
+				<div class="menu">
+					<div onclick="showIndex()">首页</div>
+				</div>
+			</div>
 			<div>
 				<div class="menu">
 					<div onclick="sexCount()">用户性别统计</div>
@@ -451,6 +506,11 @@ javascript: (function() {
 				</div>
 			</div>
 		</div>
+		<div class="indexContent" id="indexContent">
+			<h2 id="checkVersionH">插件更新检测...</h2>
+			<div><span class="note">注意事项:</span><br>请勿短时间内在多个视频中使用该插件,否则可能会被B站官方暂时封锁IP,导致10分钟内无法查看视频评论,同时也无法使用该插件(目前该插件只支持分析前30页的评论)</div>
+			<div><br><br><a href="#" onclick="window.open('https://space.bilibili.com/14618291')">作者B站主页</a></div>
+		</div>
 		<div class="dataContent" id="dataContent">
 
 		</div>
@@ -466,10 +526,31 @@ javascript: (function() {
 		</div>
 
 		<script>
-			var opener;
-			$(document).ready(function() {
-				opener = window.opener;
-			});
+			var opener = window.opener;
+			var toolVersion='版本号###version2020815085914###';
+			var newVersion='';
+			
+			function ready(){
+				showIndex();
+			}
+			
+			function showIndex(){
+				console.log("showIndex");
+				$("#indexContent").css("display","block");
+				$("#replyContent").css("display","none");
+				$("#dataContent").css("display","none");
+				setTimeout("checkVersion()",3*1000);
+			}
+			
+			function checkVersion(){
+				console.log("checkVersion");
+				if(!!newVersion&&toolVersion!=newVersion){
+					/*alert("有新版本!");*/
+					$("#checkVersionH").html("有新版本,请下载最新版本插件!<a href='https://github.com/616717724/bilibiliReplyTool'>下载页面</a>");
+				}else{
+					$("#checkVersionH").text("该插件已经是最新版本");
+				}
+			}
 
 			function sexCount() {
 				if (!!opener) {
@@ -492,6 +573,7 @@ javascript: (function() {
 			function searchReplys(){
 				if (!!opener) {
 					$("#dataContent").css("display","none");
+					$("#indexContent").css("display","none");
 					$(".searchDiv").css("display","block");
 					$("#replyContent").css("display","block");
 				}
@@ -500,6 +582,7 @@ javascript: (function() {
 			function fansReplys(){
 				if (!!opener) {
 					$("#dataContent").css("display","none");
+					$("#indexContent").css("display","none");
 					$(".searchDiv").css("display","none");
 					$("#replyContent").css("display","block");
 					showFansReplys();
@@ -710,6 +793,7 @@ javascript: (function() {
 			/*设置Echarts*/
 			var myChart;
 			function setEcharts(option){
+				$("#indexContent").css("display","none");
 				$("#replyContent").css("display","none");
 				$("#dataContent").css("display","block");
 				if(!myChart){
@@ -778,6 +862,23 @@ javascript: (function() {
 `;
 		subDoc.write(htmlContent);
 		subWin.data=window.data;
+		setTimeout("subWin.ready();",1*1000);
 	};
 	createSubWin();
+	/*复制b站CSS*/
+	$(document).find("style").each(function (i,o){
+		$(o).clone().appendTo(subDoc.head);
+	});
+	
+	/*检测版本页面*/
+	window.createVersionFrame=function(){
+		var iframe=`<iframe src="https://www.bilibili.com/read/cv7182130" style="display: none;" id="iframe">
+					<p>无法获取版本更新信息</p>
+		</iframe>`;
+		$("body").append(iframe);
+		window.newVersion=$(document.getElementById('iframe').contentWindow.document);
+		subWin.newVersion=window.newVersion.find("blockquote").find("span")[0].innerText;
+	};
+	setTimeout("createVersionFrame()",2*1000);
+
 })();
