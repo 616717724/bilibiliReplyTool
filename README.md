@@ -1,5 +1,10 @@
-# bilibiliReplyTool
-js ###version2020815085914###
+# bilibiliReplyTool/哔哩哔哩评论统计分析工具
+###version2020815085914###
+
+使用方法
+1、下载“bookmarks.html”文件；
+2、导入“bookmarks.html”到浏览器收藏中；
+3、用浏览器打开哔哩哔哩视频，点击已收藏的“bilibili评论统计分析工具”标签；
 
 已完成功能
 性别统计；
@@ -8,3 +13,4 @@ js ###version2020815085914###
 评论查询；
 用户等级统计；
 牌子用户统计；
+
