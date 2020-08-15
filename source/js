@@ -39,6 +39,9 @@ javascript: (function() {
 	/*获取全部留言*/
 	window.getAllReply = function() {
 		this.idx = 0;
+		if(pageCount>30){
+			pageCount=30;
+		}
 		for (i = 1; i < pageCount; i++) {
 			addScriptTag('getReply', (i));
 		}
@@ -187,14 +190,19 @@ javascript: (function() {
 	};
 	
 	/*初始化*/
-	addScriptTag();
+	window.init=function(){
+		if(!this.allReply){
+			addScriptTag();
+		}
+	};
+	init();
 	
 	/*创建子窗口*/
 	window.createSubWin=function(){
-		var subWin=window.open('','子窗口','width=900,height=600,left=450,top=200');
+		window.subWin=window.open('','子窗口','width=900,height=600,left=450,top=200');
 		var src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js";
-		var subDoc=subWin.document;
-		var subBody=subWin.document.body;
+		window.subDoc=subWin.document;
+		window.subBody=subWin.document.body;
 		window.iniJQ=function(){
 			var script = subDoc.createElement('script');
 			script.setAttribute("type", "text/javascript");
@@ -203,9 +211,325 @@ javascript: (function() {
 			subDoc.head.appendChild(script);
 		};
 		iniJQ();
-		var htmlContent=`<div id='tDiv'>tDiv用来替换内容</div>`;
-		subDoc.write(htmlContent);
-		subWin.data=window.data;
-	};
-	createSubWin();
-})();
+		var htmlContent=`<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>bilibili评论统计分析工具</title>
+		<script src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+		<style>
+			body {
+				margin: 0px;
+				padding: 0px;
+			}
+
+			.topContent {
+				position: fixed;
+				height: 50px;
+				width: 100%;
+				background-color: #FFFFFF;
+				z-index: 12;
+				margin: 0;
+				padding: 0;
+				text-align: center;
+				box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.08);
+			}
+
+			.menuContent {
+				position: fixed;
+				padding: 0;
+				margin: 0;
+				left: 0;
+				top: 0;
+				bottom: 0;
+				right: 0;
+				background-color: #23ade5;
+				color: white;
+				width: 130px;
+				box-shadow: 1px 1px 5px #888888;
+				z-index: 11;
+			}
+
+			.menuContent>div:first-child {
+				margin-top: 50px;
+				text-align: center;
+			}
+
+			.menuContent div {
+				/* margin-top: 10px; */
+				text-align: center;
+				vertical-align: middle;
+				float: left;
+				width: 115px;
+			}
+
+			.menu {
+				border: #FFFFFF solid 1px;
+				margin-top: 15px;
+				padding-right: 2px;
+				margin-left: 5px;
+				box-shadow: 1px 1px 5px #888888;
+			}
+
+			.menu:hover {
+				background-color: rgb(35, 220, 220);
+				cursor: pointer;
+			}
+
+			.dataContent,.indexContent {
+				--ml:130px;
+				margin-left: var(--ml);
+				padding-top: 60px;
+				padding-left: 0;
+				padding-right: 0;
+				--mw:800px;
+				min-width: calc(var((--mw)-(--ml)));
+				min-height: 270px;
+				z-index: 10;
+				/*background-color: #F5F5DC;*/
+			}
+			
+			.indexContent{
+				text-align: center;
+			}
+			.indexContent div{
+				text-align: left;
+				width: 70%;
+				display: inline-block;
+				font-size: 20px;
+			}
+			#checkVersionH {
+			    font-size: 32px;
+			}
+			
+			.dataContent{
+				display: none;
+			}
+
+			.icons {
+				background-image: url("https://static.hdslb.com/images/base/icons.png");
+				background-repeat: no-repeat;
+				background-position: 0px 0px;
+				display: inline-block;
+				width: 50px;
+				height: 50px;
+				float: left;
+				--bgx: -135px;
+				--bgy: -75px;
+			}
+
+			.icon1 {
+				background-position: var(--bgx) calc(var(--bgy)*1.1);
+			}
+
+			.icon2 {
+				background-position: var(--bgx) calc(var(--bgy)*1.9);
+			}
+			
+			.replyDiv {
+				background-color: white;
+				width: 638px;
+			}
+			
+			.userImg img {
+				height: 48px;
+				width: 48px;
+				vertical-align: middle;
+				border-radius: 50%;
+				padding: 0px 5px;
+			}
+			
+			.userName {
+				display: inline;
+				vertical-align: middle;
+				margin-left: 5px;
+			}
+			
+			.levelImg {
+				background-image: url(https://static.hdslb.com/phoenix/dist/images/icons-comment.png);
+				display: inline-block;
+				width: 19px;
+				height: 9px;
+				vertical-align: middle;
+				margin: 0 8px;
+				--levelImgX:-23px;
+				--levelImgBaseY:-92px;
+				--unit:-64px;
+				--levelImgY: calc(0% + var(--levelImgBaseY) + calc(var(--unit) * var(--times)));
+				background-position: var(--levelImgX) var(--levelImgY);
+			}
+			.levelImg1 {
+				--times:0;
+			}
+			.levelImg2 {
+				--times:1;
+			}
+			.levelImg3 {
+				--times:2;
+			}
+			.levelImg4 {
+				--times:3;
+			}
+			.levelImg5 {
+				--times:4;
+			}
+			.levelImg6 {
+				--times:5;
+			}
+			.levelImg7 {
+				--times:6;
+			}
+			.levelImg8 {
+				--times:7;
+			}
+			.replyContent{
+				margin-left: 58px;
+				border-bottom: 1px solid #e5e9ef;
+				padding-bottom: 5px;
+			}
+			.replyContentDiv{
+				text-align: center;
+				display: none;
+			}
+			#replyContentList{
+				text-align: left;
+				margin-left: 85px;
+			}
+			
+			.searchDiv{
+				width: 638px;
+				position: fixed;
+				text-align: left;
+				margin-left: 85px;
+				padding: 0px;
+				margin-top: -10px;
+				background-color: white;
+			}
+			.searchInput{
+				width: 90%;
+				overflow: hidden;
+				height: 34px;
+				background: #F4F4F4;
+				border: 1px solid #E7E7E7;
+				box-shadow: none;
+				color: #999;
+				font-size: 14px;
+				line-height: 34px;
+				vertical-align: middle;
+			}
+			.searchInput:hover{
+				background-color: rgba(240, 240, 240, 1);
+			}
+			.searchButton{
+				height: 34px;
+				width: 50px;
+				text-align: center;
+				vertical-align: middle;
+				display: inline-block;
+				margin: auto 0;
+				padding-top: 10px;
+				background-color: #c5cbcc;
+				color: white;
+			}
+			.searchButton:hover {
+			    background-color: #979a9a;
+				cursor: pointer;
+			}
+			span.fRed {
+			    color: red;
+			}
+			.fansSign{
+				border: 1px solid #2EBDA7;
+				color: #2EBDA7;
+				border-radius: 3px;
+				vertical-align: middle;
+			}
+			
+			.bili_logo{
+				float: left;
+				color: white;
+				font-size: 32px;
+				color: #00a1d6;
+				vertical-align: middle;
+				margin: 5px;
+				display: inline-block;
+			}
+			.bili_logo div{
+				margin: 5px;
+				display: inline;
+			}
+			
+			.note{
+				color: red;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="topContent">
+			<i class="bilifont bili-Navbar_logo bili_logo">
+				<div>
+					评论统计分析工具
+				</div>
+			</i>
+			
+		</div>
+		<div class="menuContent">
+			<div>
+				<div class="menu">
+					<div onclick="showIndex()">首页</div>
+				</div>
+			</div>
+			<div>
+				<div class="menu">
+					<div onclick="sexCount()">用户性别统计</div>
+				</div>
+			</div>
+			<div>
+				<div class="menu">
+					<div onclick="replyTimeCount()">评论时间段统计</div>
+				</div>
+			</div>
+			<div>
+				<div class="menu">
+					<div onclick="levelCount()">用户等级统计</div>
+				</div>
+			</div>
+			<div>
+				<div class="menu">
+					<div onclick="searchReplys()">关键字搜索</div>
+				</div>
+			</div>
+			<div>
+				<div class="menu">
+					<div onclick="fansReplys()">牌粉留言信息</div>
+				</div>
+			</div>
+		</div>
+		<div class="indexContent" id="indexContent">
+			<h2 id="checkVersionH">插件更新检测...</h2>
+			<div><span class="note">注意事项:</span><br>请勿短时间内在多个视频中使用该插件,否则可能会被B站官方暂时封锁IP,导致10分钟内无法查看视频评论,同时也无法使用该插件(目前该插件只支持分析前30页的评论)</div>
+			<div><br><br><a href="#" onclick="window.open('https://space.bilibili.com/14618291')">作者B站主页</a></div>
+		</div>
+		<div class="dataContent" id="dataContent">
+
+		</div>
+		
+		<div class="dataContent replyContentDiv" id="replyContent">
+			<dir class="searchDiv">
+				<input class="searchInput" id="searchInput" onkeydown="keySearch()"/>
+				<div class="searchButton" onclick="showReplysContent()">搜索</div>
+			</dir>
+			<div class="dataContent" id="replyContentList">
+			
+			</div>
+		</div>
+
+		<script>
+			var opener = window.opener;
+			var toolVersion='版本号###version2020815085914###';
+			var newVersion='';
+			
+			function ready(){
+				showIndex();
+			}
