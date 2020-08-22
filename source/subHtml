@@ -295,7 +295,8 @@
 		</div>
 		<div class="indexContent" id="indexContent">
 			<h2 id="checkVersionH">插件更新检测...</h2>
-			<div><span class="note">注意事项:</span><br>请勿短时间内在多个视频中使用该插件,否则可能会被B站官方暂时封锁IP,导致10分钟内无法查看视频评论,同时也无法使用该插件(目前该插件只支持分析前30页的评论)</div>
+			<h2 id="getMoreData">5s后抓取更多评论数据</h2>
+			<div><span class="note">注意事项:</span><br>请勿短时间内在多个视频中使用该插件,否则可能会被B站官方暂时封锁IP,导致10分钟内无法查看视频评论,同时也无法使用该插件(目前该插件每次抓取30页的评论)</div>
 			<div><br><br><a href="#" onclick="window.open('https://space.bilibili.com/14618291')">作者B站主页</a></div>
 		</div>
 		<div class="dataContent" id="dataContent">
@@ -314,11 +315,13 @@
 
 		<script>
 			var opener = window.opener;
-			var toolVersion='版本号###version2020815085914###';
+			var toolVersion='版本号###version2020822151812###';
 			var newVersion='';
+			var timeOut=5;
 			
 			function ready(){
 				showIndex();
+				updateTimeOut();
 			}
 			
 			function showIndex(){
@@ -326,7 +329,7 @@
 				$("#indexContent").css("display","block");
 				$("#replyContent").css("display","none");
 				$("#dataContent").css("display","none");
-				setTimeout("checkVersion()",3*1000);
+				/* setTimeout("checkVersion()",3*1000); */
 			}
 			
 			function checkVersion(){
@@ -336,6 +339,26 @@
 					$("#checkVersionH").html("有新版本,请下载最新版本插件!<a href='https://github.com/616717724/bilibiliReplyTool'>下载页面</a>");
 				}else{
 					$("#checkVersionH").text("该插件已经是最新版本");
+				}
+			}
+			
+			function updateTimeOut(){
+				if(0<timeOut&&timeOut<=5){
+					timeOut--;
+					$("#getMoreData").text(timeOut+"s后抓取更多评论数据");
+					setTimeout("updateTimeOut()",1*1000);
+				}else{
+					timeOut=5;
+					$("#getMoreData").text("正在抓取更多评论数据");
+					setTimeout("getMoreReply();",1*1000);
+				}
+			}
+			
+			function getMoreReply(){
+				if(opener.getMoreReply()){
+					setTimeout("updateTimeOut();",1*1000);
+				}else{
+					$("#getMoreData").text("已抓取所有评论数据");
 				}
 			}
 
