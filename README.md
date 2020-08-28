@@ -24,3 +24,12 @@
 <h3>网盘下载插件地址：</h3>
 链接：<a href="https://pan.baidu.com/s/1019KMC4QMIizn8yYauzG-Q">https://pan.baidu.com/s/1019KMC4QMIizn8yYauzG-Q</a>
 提取码：vx8f
+
+<h3>更新日志：</h3>
+<p>版本号###version2020822151812###</p>
+
+<p>1：完善抓取评论数据功能，现在工具会分批抓取视频中所有评论；</p>
+
+<p>2：完善插件版本更新检测功能，之前版本存在部分BUG，导致更新检测失败；</p>
+
+<p>3：完善评论数据抓取和分析，修复出现重复评论BUG；</p>
