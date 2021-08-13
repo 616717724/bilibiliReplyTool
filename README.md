@@ -1,6 +1,6 @@
 # bilibiliReplyTool/哔哩哔哩评论统计分析工具
 <div id='toolVersion' style="display:none;">###version2020815085914###</div>
-
+<h3>已转至gitee更新 <a href="https://gitee.com/x616717724/bilibiliReplyTool">https://gitee.com/x616717724/bilibiliReplyTool</a></h3>
 <h3>使用方法</h3>
 <ol>
   <li>下载“bookmarks.html”文件；</li>
